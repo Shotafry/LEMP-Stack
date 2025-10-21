@@ -78,7 +78,7 @@ Esto lo podras hacer si lo hiciste bien y seguiste todos los pasos de arriba.
 
 Una vez que todos los servicios estén levantados, puedes acceder a tu entorno usando las credenciales que hayas puesto en el .env
 
-🛑 Detener y Limpiar
+# Detener y Limpiar
 
   Para detener y eliminar todos los contenedores y redes creadas (manteniendo los datos de MariaDB): docker compose down
   Si deseas eliminar también los datos persistentes de la base de datos (el volumen mariadb_data):docker compose down --volumes
