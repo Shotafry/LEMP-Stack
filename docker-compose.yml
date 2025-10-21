@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Servicio PHP-FPM
+  php:
+    build:
+      context: .
+      dockerfile: docker/php.Dockerfile
+    container_name: ${APP_NAME:-lemp}-php
+    volumes:
+      - './app:/var/www/html'
+    # >>> AÑADE ESTA SECCIÓN <<<
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?err}
+      MYSQL_USER: ${MYSQL_USER:?err}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?err}
+    # >>> FIN DE LA SECCIÓN AÑADIDA <<<
+    depends_on:
+      - mariadb
+    restart: always
+  # Servicio NGINX (Servidor Web)
+  nginx:
+    image: nginx:stable-alpine  # Imagen ligera y estable
+    container_name: ${APP_NAME:-lemp}-nginx
+    # Mapea los puertos del host a los del contenedor
+    ports:
+      - '80:80'
+      - '443:443'
+    # Mapea el código de la aplicación y la configuración personalizada de Nginx
+    volumes:
+      - './app:/var/www/html:ro'  # Modo lectura para código
+      - './config/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro' # Archivo de config principal
+    # Nginx necesita conocer el servicio 'php' para pasarle las peticiones PHP
+    depends_on:
+      - php
+    restart: always
+
+  # Servicio MariaDB (Base de Datos)
+  mariadb:
+    image: mariadb:11.4  # Versión moderna y estable
+    container_name: ${APP_NAME:-lemp}-mariadb
+    environment:
+      # Variables de entorno para la configuración inicial de la DB
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?err}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?err}
+      MYSQL_USER: ${MYSQL_USER:?err}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?err}
+    # Persistencia de datos en un volumen nombrado
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    # Verificación de salud para un arranque más robusto
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  # >>> NUEVO SERVICIO AÑADIDO: PHPMYADMIN <<<
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ${APP_NAME:-lemp}-phpmyadmin
+    environment:
+      # phpMyAdmin se conectará al servicio 'mariadb' (nombre del host)
+      PMA_HOST: mariadb
+      # Puerto por defecto del servidor MySQL
+      PMA_PORT: 3306
+      # Las credenciales de root son necesarias para la configuración inicial
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?err}
+    # Exponemos phpMyAdmin en el puerto 8080 del host
+    ports:
+      - '8080:80'
+    depends_on:
+      - mariadb
+    restart: always
+
+volumes:
+  mariadb_data: # Volumen para datos persistentes de MariaDB
+    driver: local
+
