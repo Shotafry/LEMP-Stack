@@ -53,7 +53,7 @@ Este archivo le indica a Nginx cómo manejar las peticiones, especialmente cómo
 RUN docker-php-ext-install pdo pdo_mysql mysqli \
     && rm -rf /tmp/*
 
-# ⚙️ Proceso de Instalación y EjecuciónSigue estos pasos para levantar toda la pila:
+#  Proceso de Instalación y EjecuciónSigue estos pasos para levantar toda la pila:
 
 **Paso 1: Clonar el Repositorio**
 
